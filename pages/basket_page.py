@@ -3,13 +3,13 @@ from pages.locators import BasketPageLocators
 
 
 class BasketPage(BasePage):
-    def should_be_empty(self):
+    def should_be_empty(self) -> None:
         self.should_be_text_about_empty()
         self.should_not_have_items()
 
-    def should_be_text_about_empty(self):
+    def should_be_text_about_empty(self) -> None:
         assert self.is_element_contains_text(*BasketPageLocators.EMPTY_TEXT, 'Your basket is empty'), \
             'Text about empty basket not present'
 
-    def should_not_have_items(self):
+    def should_not_have_items(self) -> None:
         assert self.is_not_element_present(*BasketPageLocators.ITEMS_FORM)
