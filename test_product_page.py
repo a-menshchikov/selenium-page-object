@@ -1,4 +1,7 @@
+import time
 import pytest
+
+from faker import Faker
 
 from pages.basket_page import BasketPage
 from pages.login_page import LoginPage
@@ -6,6 +9,32 @@ from pages.product_page import ProductPage
 
 urls = [f'http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer{n}' for n in range(10)]
 urls[7] = pytest.param(urls[7], marks=pytest.mark.xfail)
+
+
+@pytest.mark.user_add_to_basket
+class TestUserAddToBasketFromProductPage:
+    @pytest.fixture(scope='function', autouse=True)
+    def setup(self, browser):
+        fake = Faker()
+        Faker.seed(time.time_ns())
+        link = 'http://selenium1py.pythonanywhere.com/accounts/login/'
+        page = LoginPage(browser, link)
+        page.open()
+        page.register_new_user(fake.email(), fake.password(length=9))
+        page.should_be_authorized_user()
+
+    def test_user_can_add_product_to_basket(self, browser):
+        link = 'http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/'
+        page = ProductPage(browser, link)
+        page.open()
+        page.add_to_cart()
+        page.should_be_success_messages()
+
+    def test_user_cant_see_success_message(self, browser):
+        link = 'http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/'
+        page = ProductPage(browser, link)
+        page.open()
+        page.should_not_be_success_message()
 
 
 @pytest.mark.parametrize('link', urls)
@@ -17,19 +46,19 @@ def test_guest_can_add_product_to_basket(browser, link):
     page.should_be_success_messages()
 
 
+def test_guest_cant_see_success_message(browser):
+    link = 'http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/'
+    page = ProductPage(browser, link)
+    page.open()
+    page.should_not_be_success_message()
+
+
 @pytest.mark.xfail
 def test_guest_cant_see_success_message_after_adding_product_to_basket(browser):
     link = 'http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/'
     page = ProductPage(browser, link)
     page.open()
     page.add_to_cart()
-    page.should_not_be_success_message()
-
-
-def test_guest_cant_see_success_message(browser):
-    link = 'http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/'
-    page = ProductPage(browser, link)
-    page.open()
     page.should_not_be_success_message()
 
 
