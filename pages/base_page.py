@@ -14,18 +14,32 @@ class BasePage:
         self.browser = browser
         self.url = url
 
-    def open(self):
-        self.browser.get(self.url)
-
-    def find_element(self, how, what, timeout=10):
+    def find_element_with_wait(self, how, what, timeout=10):
         WebDriverWait(self.browser, timeout). \
             until(EC.presence_of_element_located((how, what)))
 
         return self.browser.find_element(how, what)
 
+    def go_to_basket(self):
+        basket_link = self.find_element_with_wait(*BasePageLocators.BASKET_LINK)
+        basket_link.click()
+
+    def go_to_login_page(self):
+        login_link = self.find_element_with_wait(*BasePageLocators.LOGIN_LINK)
+        login_link.click()
+
+    def is_disappeared(self, how, what, timeout=4):
+        try:
+            WebDriverWait(self.browser, timeout, 1, TimeoutException).\
+                until_not(EC.presence_of_element_located((how, what)))
+        except TimeoutException:
+            return False
+
+        return True
+
     def is_element_present(self, how, what, timeout=10):
         try:
-            self.find_element(how, what, timeout)
+            self.find_element_with_wait(how, what, timeout)
         except NoSuchElementException:
             return False
 
@@ -40,14 +54,21 @@ class BasePage:
 
         return False
 
-    def is_disappeared(self, how, what, timeout=4):
+    def is_element_contains_text(self, how, what, text, timeout=4):
         try:
-            WebDriverWait(self.browser, timeout, 1, TimeoutException).\
-                until_not(EC.presence_of_element_located((how, what)))
+            WebDriverWait(self.browser, timeout).\
+                until(EC.text_to_be_present_in_element((how, what), text))
         except TimeoutException:
             return False
 
         return True
+
+    def open(self):
+        self.browser.get(self.url)
+
+    def should_be_login_link(self):
+        assert self.is_element_present(*BasePageLocators.LOGIN_LINK), \
+            'Login link is not presented'
 
     def solve_quiz_and_get_code(self):
         alert = self.browser.switch_to.alert
@@ -62,11 +83,3 @@ class BasePage:
             alert.accept()
         except NoAlertPresentException:
             print('No second alert presented')
-
-    def go_to_login_page(self):
-        login_link = self.browser.find_element(*BasePageLocators.LOGIN_LINK)
-        login_link.click()
-
-    def should_be_login_link(self):
-        assert self.is_element_present(*BasePageLocators.LOGIN_LINK), \
-            'Login link is not presented'

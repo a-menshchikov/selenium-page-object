@@ -4,40 +4,42 @@ from .locators import ProductPageLocators
 
 class ProductPage(BasePage):
     def add_to_cart(self):
-        button = self.find_element(*ProductPageLocators.ADD_TO_CART_BUTTON)
+        button = self.find_element_with_wait(*ProductPageLocators.ADD_TO_CART_BUTTON)
         button.click()
 
-    def should_not_be_success_message(self):
-        assert self.is_not_element_present(*ProductPageLocators.SUCCESS_MESSAGE), \
-            'Success message is presented, but should not be'
+    def get_product_price(self):
+        return self.find_element_with_wait(*ProductPageLocators.ITEM_PRICE).text.strip()
+
+    def get_product_title(self):
+        return self.find_element_with_wait(*ProductPageLocators.ITEM_TITLE).text.strip()
 
     def should_be_disappeared_success_message(self):
         assert self.is_disappeared(*ProductPageLocators.SUCCESS_MESSAGE), \
             'Success message is not disappeared, but should be'
+
+    def should_be_messages(self):
+        assert self.is_element_present(*ProductPageLocators.SUCCESS_MESSAGE), \
+            'Success message is not present'
+
+    def should_be_price_in_messages(self):
+        alert_price_locator = ProductPageLocators.ALERT_PRICE
+        alert_price_locator[1] += f'[contains(text(), "{self.get_product_price()}")]'
+
+        assert self.is_element_present(*alert_price_locator), \
+            'Messages does not contain item price'
 
     def should_be_success_messages(self):
         self.should_be_messages()
         self.should_be_title_in_messages()
         self.should_be_price_in_messages()
 
-    def should_be_messages(self):
-        assert self.is_element_present(*ProductPageLocators.SUCCESS_MESSAGE), \
-            'Success message is not present'
-
     def should_be_title_in_messages(self):
-        title = self.browser.find_element(*ProductPageLocators.ITEM_TITLE).text.strip()
-
         alert_title_locator = ProductPageLocators.ALERT_TITLE
-        alert_title_locator[1] += f'[contains(text(), "{title}")]'
+        alert_title_locator[1] += f'[contains(text(), "{self.get_product_title()}")]'
 
         assert self.is_element_present(*ProductPageLocators.ALERT_TITLE), \
             'Messages does not contain item title'
 
-    def should_be_price_in_messages(self):
-        price = self.browser.find_element(*ProductPageLocators.ITEM_PRICE).text.strip()
-
-        alert_price_locator = ProductPageLocators.ALERT_PRICE
-        alert_price_locator[1] += f'[contains(text(), "{price}")]'
-
-        assert self.is_element_present(*alert_price_locator), \
-            'Messages does not contain item price'
+    def should_not_be_success_message(self):
+        assert self.is_not_element_present(*ProductPageLocators.SUCCESS_MESSAGE), \
+            'Success message is presented, but should not be'
